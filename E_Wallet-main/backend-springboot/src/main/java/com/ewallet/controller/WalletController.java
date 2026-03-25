@@ -18,7 +18,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/wallet")
-// @CrossOrigin removed - using global Spring Security CORS
+@CrossOrigin(origins = "http://localhost:5173")
 public class WalletController {
 
     private final WalletRepository walletRepository;

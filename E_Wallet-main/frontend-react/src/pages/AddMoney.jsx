@@ -18,7 +18,7 @@ function AddMoney() {
 
   const fetchAccounts = async () => {
     try {
-      const res = await fetch(`http://localhost:8080/accounts`, {
+      const res = await fetch(`http://localhost:8080/accounts/${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }

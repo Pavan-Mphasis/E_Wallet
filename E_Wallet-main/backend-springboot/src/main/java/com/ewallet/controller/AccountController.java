@@ -13,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/accounts")
-// @CrossOrigin removed - defined globally in SecurityConfig
+@CrossOrigin
 public class AccountController {
 
     @Autowired
@@ -22,29 +22,29 @@ public class AccountController {
     @Autowired
     private UserRepository userRepository;
 
-    // GET accounts (SECURE)
-    @GetMapping
-    public List<BankAccount> getAccounts(org.springframework.security.core.Authentication auth) {
-        User loggedInUser = userRepository.findByUsername(auth.getName());
-        return repo.findByUserId(loggedInUser.getId());
+    // GET accounts
+    @GetMapping("/{userId}")
+    public List<BankAccount> getAccounts(@PathVariable Long userId) {
+        return repo.findByUserId(userId);
     }
 
     // ADD account
     @PostMapping
-    public BankAccount addAccount(@RequestBody BankAccount account, org.springframework.security.core.Authentication auth) {
+    public BankAccount addAccount(@RequestBody BankAccount account) {
 
         System.out.println("ADD ACCOUNT CONTROLLER HIT");
-
-        // 🔐 SECURE FIX: Override whatever the frontend sent with the ACTUAL authenticated user's ID
-        User loggedInUser = userRepository.findByUsername(auth.getName());
-        account.setUserId(loggedInUser.getId());
 
         // 🔍 Debug incoming data
         System.out.println("Bank: " + account.getBankName());
         System.out.println("Card: " + account.getCardNumber());
         System.out.println("Holder: " + account.getAccountHolder());
         System.out.println("Balance: " + account.getBalance());
-        System.out.println("Secure UserId: " + account.getUserId());
+        System.out.println("UserId: " + account.getUserId());
+
+        // ❌ Prevent bad request
+        if (account.getUserId() == null) {
+            throw new RuntimeException("UserId is required");
+        }
 
         try {
             return repo.save(account);
@@ -54,18 +54,11 @@ public class AccountController {
         }
     }
     @DeleteMapping("/{id}")
-    public org.springframework.http.ResponseEntity<?> deleteAccount(@PathVariable("id") Long id) {
-        try {
-            repo.deleteById(id);
-            return org.springframework.http.ResponseEntity.ok().build();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return org.springframework.http.ResponseEntity.status(500)
-                .body(Map.of("error", e.getMessage() != null ? e.getMessage() : "Unknown", "type", e.getClass().getName()));
-        }
+    public void deleteAccount(@PathVariable Long id) {
+        repo.deleteById(id);
     }
     @PutMapping("/{id}")
-    public BankAccount updateAccount(@PathVariable("id") Long id, @RequestBody BankAccount updated) {
+    public BankAccount updateAccount(@PathVariable Long id, @RequestBody BankAccount updated) {
 
         BankAccount acc = repo.findById(id).orElseThrow();
 

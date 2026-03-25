@@ -7,7 +7,6 @@ function Profile() {
   const [user, setUser] = useState({ username: "" });
   const [email, setEmail] = useState("");
   const [mfaEnabled, setMfaEnabled] = useState(false);
-  const [balance, setBalance] = useState(0);
 
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -62,21 +61,7 @@ function Profile() {
 
   useEffect(() => {
     fetchProfile();
-    fetchBalance();
   }, []);
-
-  const fetchBalance = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:8080/wallet/balance", {
-        headers: { Authorization: "Bearer " + token }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setBalance(data.balance || 0);
-      }
-    } catch (err) { }
-  };
 
   const handleLogout = () => {
     localStorage.clear();
@@ -152,163 +137,106 @@ function Profile() {
       style={{
         minHeight: "100vh",
         background: "linear-gradient(135deg, #A28dd2, #FBC2EB)",
-        padding: "40px",
-        fontFamily: "'Inter', sans-serif"
+        padding: "40px"
       }}
     >
 
       {/* NAVBAR */}
-      <nav className="d-flex justify-content-between align-items-center px-4 py-3 mb-5 shadow-sm"
-        style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(10px)", borderRadius: "16px" }}>
-        <h4 className="fw-bolder m-0 text-dark">E-Wallet Workspace</h4>
-        <div className="d-flex gap-3">
-          <Link to="/dashboard" className="btn btn-outline-dark rounded-pill px-4 fw-semibold">Dashboard</Link>
-          <button onClick={handleLogout} className="btn btn-dark rounded-pill px-4 fw-semibold shadow-sm">Logout</button>
+      <nav className="d-flex justify-content-between align-items-center px-4 py-3 mb-4"
+        style={{
+          background: "rgba(255,255,255,0.9)",
+          borderRadius: "12px"
+        }}>
+        <h5 className="fw-bold m-0">E-Wallet</h5>
+
+        <div>
+          <Link to="/dashboard" className="btn btn-outline-dark me-2">
+            Dashboard
+          </Link>
+          <button onClick={handleLogout} className="btn btn-dark">
+            Logout
+          </button>
         </div>
       </nav>
 
-      {/* MAIN GRID */}
-      <div className="container" style={{ maxWidth: "1100px" }}>
-        <div className="row g-4 align-items-stretch">
+      {/* MAIN */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        style={{
+          background: "#fff",
+          padding: "40px",
+          borderRadius: "18px"
+        }}
+      >
 
-          {/* LEFT: AVATAR CARD */}
-          <div className="col-md-5">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              style={{
-                background: "rgba(255,255,255,0.9)",
-                backdropFilter: "blur(15px)",
-                borderRadius: "24px",
-                padding: "50px 30px",
-                boxShadow: "0 20px 50px rgba(0,0,0,0.1)",
-                textAlign: "center",
-                height: "100%"
-              }}
-            >
-              <div
-                className="rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center shadow-lg"
-                style={{ width: "130px", height: "130px", background: "linear-gradient(135deg, #667eea, #764ba2)", color: "white", fontSize: "3.5rem", fontWeight: "bold" }}
-              >
-                {user.username ? user.username.charAt(0).toUpperCase() : "U"}
-              </div>
+        <h2 className="fw-bold mb-4">My Account</h2>
 
-              <h2 className="fw-bolder mb-1 text-dark">{user.username || "User"}</h2>
-              <p className="text-muted fw-medium mb-4 fs-5">{email || "No email linked"}</p>
+        {/* PROFILE */}
+        <div className="mb-4 p-4 border rounded">
+          <h6>👤 Profile Info</h6>
 
-              <div className={`badge ${mfaEnabled ? 'bg-success' : 'bg-secondary'} rounded-pill px-4 py-2 fw-semibold fs-6 shadow-sm`}>
-                {mfaEnabled ? "🔒 MFA Secured" : "⚠️ Standard Security"}
-              </div>
-            </motion.div>
+          <p><strong>Username:</strong> {user.username}</p>
+          <p><strong>Email:</strong> {email}</p>
 
-            {/* NEW QUICK WALLET STATS */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="mt-4"
-              style={{
-                background: "linear-gradient(135deg, #111827, #374151)",
-                borderRadius: "24px",
-                padding: "35px 30px",
-                boxShadow: "0 20px 50px rgba(0,0,0,0.2)",
-                textAlign: "center",
-                color: "white"
-              }}
-            >
-              <h6 className="text-white-50 text-uppercase fw-bold mb-2" style={{ letterSpacing: "1.5px", fontSize: "12px" }}>
-                Active Wallet Balance
-              </h6>
-              <h2 className="fw-bolder mb-4" style={{ fontSize: "2.5rem" }}>
-                ₹ {Number(balance).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-              </h2>
-              <Link to="/addmoney" className="btn btn-light rounded-pill px-4 fw-bold shadow-sm w-100 py-2">
-                + Add Money
-              </Link>
-            </motion.div>
-          </div>
+          <button
+            className="btn btn-outline-primary w-100 mb-2"
+            onClick={() => setShowEmailModal(true)}
+          >
+            Change Email
+          </button>
 
-          {/* RIGHT: SETTINGS */}
-          <div className="col-md-7">
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              style={{
-                background: "rgba(255, 255, 255, 0.95)",
-                borderRadius: "24px",
-                padding: "40px",
-                boxShadow: "0 20px 50px rgba(0,0,0,0.1)",
-                height: "100%"
-              }}
-            >
-              <h4 className="fw-bold mb-4 text-dark">Account Settings</h4>
-
-              {/* EMAIL SECTION */}
-              <div className="d-flex justify-content-between align-items-center p-4 mb-3" style={{ background: "#f8f9fa", borderRadius: "16px", border: "1px solid #e9ecef" }}>
-                <div>
-                  <h6 className="fw-bold mb-1 text-dark">Email Address</h6>
-                  <small className="text-muted">Manage your primary contact email</small>
-                </div>
-                <button className="btn btn-outline-primary rounded-pill px-4 fw-semibold" onClick={() => setShowEmailModal(true)}>
-                  Change
-                </button>
-              </div>
-
-              {/* PASSWORD SECTION */}
-              <div className="d-flex justify-content-between align-items-center p-4 mb-4" style={{ background: "#f8f9fa", borderRadius: "16px", border: "1px solid #e9ecef" }}>
-                <div>
-                  <h6 className="fw-bold mb-1 text-dark">Password</h6>
-                  <small className="text-muted">Ensure your account is secure</small>
-                </div>
-                <button className="btn btn-outline-dark rounded-pill px-4 fw-semibold" onClick={() => setShowPasswordModal(true)}>
-                  Update
-                </button>
-              </div>
-
-              <h4 className="fw-bold mb-3 mt-5 text-dark">Security Preferences</h4>
-
-              {/* MFA SECTION */}
-              <div className="d-flex justify-content-between align-items-center p-4" style={{ background: mfaEnabled ? "#f0fdf4" : "#fef2f2", borderRadius: "16px", border: `1px solid ${mfaEnabled ? "#bbf7d0" : "#fecaca"}` }}>
-                <div>
-                  <h6 className="fw-bold mb-1 text-dark">Two-Factor Auth (MFA)</h6>
-                  <small className="text-muted">{mfaEnabled ? "Your account is highly protected." : "Add an extra layer of security."}</small>
-                </div>
-                <button className={`btn ${mfaEnabled ? 'btn-success' : 'btn-danger'} rounded-pill px-4 fw-semibold shadow-sm`} onClick={() => navigate("/mfa-setup")}>
-                  {mfaEnabled ? "Manage Settings" : "Enable OTP"}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-
+          <button
+            className="btn btn-outline-secondary w-100"
+            onClick={() => setShowPasswordModal(true)}
+          >
+            Change Password
+          </button>
         </div>
-      </div>
+
+        {/* SECURITY */}
+        <div className="p-4 border rounded">
+          <h6>🔐 Security</h6>
+
+          <p>
+            MFA Status:{" "}
+            <span className={`badge ${mfaEnabled ? "bg-success" : "bg-secondary"}`}>
+              {mfaEnabled ? "Enabled" : "Disabled"}
+            </span>
+          </p>
+
+          <button
+            className="btn btn-warning w-100"
+            onClick={() => navigate("/mfa-setup")}
+          >
+            Enable MFA (Scan QR)
+          </button>
+        </div>
+
+      </motion.div>
 
       {/* EMAIL MODAL */}
       {showEmailModal && (
-        <div className="modal d-block d-flex align-items-center justify-content-center" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(5px)" }}>
-          <div className="modal-dialog" style={{ width: "400px" }}>
-            <div className="modal-content p-4" style={{ borderRadius: "20px", border: "none", boxShadow: "0 25px 50px rgba(0,0,0,0.2)" }}>
+        <div className="modal d-block" style={{ background: "rgba(0,0,0,0.5)" }}>
+          <div className="modal-dialog">
+            <div className="modal-content p-4">
 
-              <h4 className="fw-bold mb-3 text-dark">Change Email</h4>
-              <p className="text-muted small mb-4">Enter a new secure email address for your account.</p>
+              <h5>Change Email</h5>
 
               <input
                 type="email"
-                className="form-control mb-4 py-2 px-3"
-                style={{ borderRadius: "12px", border: "1px solid #ced4da" }}
-                placeholder="Ex. mail@example.com"
+                className="form-control mb-3"
+                placeholder="Enter new email"
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
               />
 
-              <button className="btn btn-primary w-100 mb-2 rounded-pill fw-semibold py-2 shadow-sm" onClick={handleChangeEmail}>
-                Update Email
+              <button className="btn btn-primary w-100" onClick={handleChangeEmail}>
+                Update
               </button>
 
               <button
-                className="btn btn-light w-100 rounded-pill fw-semibold py-2"
+                className="btn btn-secondary w-100 mt-2"
                 onClick={() => setShowEmailModal(false)}
               >
                 Cancel
@@ -321,16 +249,15 @@ function Profile() {
 
       {/* PASSWORD MODAL */}
       {showPasswordModal && (
-        <div className="modal d-block d-flex align-items-center justify-content-center" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(5px)" }}>
-          <div className="modal-dialog" style={{ width: "400px" }}>
-            <div className="modal-content p-4" style={{ borderRadius: "20px", border: "none", boxShadow: "0 25px 50px rgba(0,0,0,0.2)" }}>
+        <div className="modal d-block" style={{ background: "rgba(0,0,0,0.5)" }}>
+          <div className="modal-dialog">
+            <div className="modal-content p-4">
 
-              <h4 className="fw-bold mb-3 text-dark">Update Password</h4>
+              <h5>Change Password</h5>
 
               <input
                 type="password"
-                className="form-control mb-3 py-2 px-3"
-                style={{ borderRadius: "12px", border: "1px solid #ced4da" }}
+                className="form-control mb-2"
                 placeholder="Current Password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
@@ -338,8 +265,7 @@ function Profile() {
 
               <input
                 type="password"
-                className="form-control mb-3 py-2 px-3"
-                style={{ borderRadius: "12px", border: "1px solid #ced4da" }}
+                className="form-control mb-2"
                 placeholder="New Password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
@@ -347,19 +273,18 @@ function Profile() {
 
               <input
                 type="password"
-                className="form-control mb-4 py-2 px-3"
-                style={{ borderRadius: "12px", border: "1px solid #ced4da" }}
+                className="form-control mb-3"
                 placeholder="Confirm Password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
 
-              <button className="btn btn-dark w-100 rounded-pill fw-semibold py-2 mb-2 shadow-sm" onClick={handleChangePassword}>
-                Save Password
+              <button className="btn btn-primary w-100" onClick={handleChangePassword}>
+                Update
               </button>
 
               <button
-                className="btn btn-light w-100 rounded-pill fw-semibold py-2"
+                className="btn btn-secondary w-100 mt-2"
                 onClick={() => setShowPasswordModal(false)}
               >
                 Cancel

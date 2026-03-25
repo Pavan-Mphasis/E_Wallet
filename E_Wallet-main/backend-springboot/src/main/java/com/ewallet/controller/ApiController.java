@@ -24,7 +24,7 @@ import java.util.Base64;
 import java.util.Map;
 
 @RestController
-// @CrossOrigin removed - using global Spring Security CORS
+@CrossOrigin(origins = "http://localhost:5173")
 public class ApiController {
 
     private final AuthenticationManager authenticationManager;
@@ -196,46 +196,6 @@ public class ApiController {
     }
 
 
-
-    @GetMapping("/user/details")
-    public Map<String, Object> getUserDetails(@RequestHeader("Authorization") String authHeader) {
-        String token = authHeader.substring(7);
-        String username = jwtUtil.extractUsername(token);
-        User user = userRepository.findByUsername(username);
-
-        if (user == null) {
-            return Map.of("error", "User not found");
-        }
-        return Map.of(
-            "username", user.getUsername(),
-            "email", user.getEmail(),
-            "mfaEnabled", user.isMfaEnabled()
-        );
-    }
-
-    @PutMapping("/user/change-email")
-    public Map<String, Object> changeEmail(
-            @RequestHeader("Authorization") String authHeader,
-            @RequestBody Map<String, String> req) {
-        
-        String token = authHeader.substring(7);
-        String username = jwtUtil.extractUsername(token);
-        User user = userRepository.findByUsername(username);
-
-        if (user == null) {
-            return Map.of("message", "User not found");
-        }
-
-        String newEmail = req.get("email");
-        if (newEmail == null || newEmail.isEmpty()) {
-            return Map.of("message", "Invalid email");
-        }
-
-        user.setEmail(newEmail);
-        userRepository.save(user);
-
-        return Map.of("message", "Email updated successfully");
-    }
 
     @PutMapping("/user/change-password")
     public Map<String, Object> changePassword(

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+
 function MFASetup() {
 
   const [qrImage, setQrImage] = useState(null);
@@ -7,12 +7,6 @@ function MFASetup() {
   const [loading, setLoading] = useState(false);
 
   const token = localStorage.getItem("token");
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/");
-  };
 
   useEffect(() => {
     checkStatus();
@@ -116,21 +110,11 @@ function MFASetup() {
         >
 
           {/* HEADER */}
-          <div className="mb-4 d-flex justify-content-between align-items-start">
-            <div>
-              <h3 className="fw-bold mb-1">Multi-Factor Authentication</h3>
-              <p className="text-muted mb-0">
-                Secure your account with Google Authenticator
-              </p>
-            </div>
-            <div className="d-flex gap-2">
-              <button
-                className="btn btn-outline-dark btn-sm rounded-pill px-3"
-                onClick={() => navigate("/dashboard")}
-              >
-                Back to Dashboard
-              </button>
-            </div>
+          <div className="mb-4">
+            <h3 className="fw-bold mb-1">Multi-Factor Authentication</h3>
+            <p className="text-muted">
+              Secure your account with Google Authenticator
+            </p>
           </div>
 
           {/* STATUS */}
@@ -214,16 +198,9 @@ function MFASetup() {
                 }}
               />
 
-              <p className="mt-3 text-muted small mb-4">
-                After scanning, click below to test your new OTP code
+              <p className="mt-3 text-muted small">
+                After scanning, logout and login again to activate MFA
               </p>
-
-              <button
-                className="btn btn-primary rounded-pill px-5 py-2 fw-semibold shadow-sm"
-                onClick={handleLogout}
-              >
-                Logout & Verify App
-              </button>
 
             </div>
           )}

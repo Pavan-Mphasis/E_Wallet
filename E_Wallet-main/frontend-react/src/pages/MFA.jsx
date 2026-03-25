@@ -120,7 +120,7 @@ function MFA() {
             className="form-control mb-3 text-center"
             placeholder="••••••"
             value={otp}
-            onChange={(e) => setOtp(e.target.value)}
+            onChange={(e)=>setOtp(e.target.value)}
             maxLength="6"
             style={{
               fontSize: "24px",

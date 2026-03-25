@@ -42,8 +42,8 @@ function Signup() {
         window.location.href = "/";
       }
 
-    } catch (err) {
-      setError("Error: " + err.message);
+    } catch {
+      setError("Server error");
     }
   };
 

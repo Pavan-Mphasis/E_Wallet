@@ -13,74 +13,46 @@ function Accounts() {
   }, []);
 
   const fetchAccounts = async () => {
-    try {
-      const res = await fetch(`http://localhost:8080/accounts`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json();
-      // Fallback protection against server errors so the screen never crashes again
-      if (Array.isArray(data)) {
-        setAccounts(data);
-      } else {
-        setAccounts([]);
-      }
-    } catch {
-      setAccounts([]);
-    }
+    const res = await fetch(`http://localhost:8080/accounts/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    setAccounts(data);
   };
 
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
 
   const handleDelete = async (id) => {
-    try {
-      const res = await fetch(`http://localhost:8080/accounts/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) {
-        const errorText = await res.text();
-        alert("Delete failed! Server says: " + errorText);
-        return;
-      }
-      fetchAccounts();
-    } catch (err) {
-      alert("Network Error: " + err.message);
-    }
+    await fetch(`http://localhost:8080/accounts/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    fetchAccounts();
   };
 
   const handleSave = async () => {
-    try {
-      const isNew = !form.id;
+    const isNew = !form.id;
 
-      const url = isNew
-        ? "http://localhost:8080/accounts"
-        : `http://localhost:8080/accounts/${form.id}`;
+    const url = isNew
+      ? "http://localhost:8080/accounts"
+      : `http://localhost:8080/accounts/${form.id}`;
 
-      const method = isNew ? "POST" : "PUT";
+    const method = isNew ? "POST" : "PUT";
 
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          ...form,
-          balance: Number(form.balance),
-          userId: Number(userId)
-        })
-      });
+    await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        ...form,
+        userId: Number(userId)
+      })
+    });
 
-      if (!res.ok) {
-        alert("Failed to save account: Server returned HTTP " + res.status);
-        return;
-      }
-
-      setForm(null);
-      fetchAccounts();
-    } catch (err) {
-      alert("Network or CORS Error: " + err.message);
-    }
+    setForm(null);
+    fetchAccounts();
   };
 
   return (
@@ -95,10 +67,10 @@ function Accounts() {
         <h1 className="fw-bold">My Bank Accounts </h1>
 
         <div className="mt-4 p-4 rounded-4"
-          style={{
-            background: "rgba(255,255,255,0.1)",
-            backdropFilter: "blur(10px)"
-          }}>
+             style={{
+               background: "rgba(255,255,255,0.1)",
+               backdropFilter: "blur(10px)"
+             }}>
           <h5>Total Balance</h5>
           <h2 className="fw-bold">₹{totalBalance}</h2>
         </div>
@@ -111,12 +83,12 @@ function Accounts() {
           <div className="col-md-4 mb-4" key={acc.id}>
 
             <div className="p-4 text-white shadow-lg"
-              style={{
-                borderRadius: "20px",
-                background: "linear-gradient(135deg, #ff7e5f, #feb47b)",
-                position: "relative",
-                overflow: "hidden"
-              }}>
+                 style={{
+                   borderRadius: "20px",
+                   background: "linear-gradient(135deg, #ff7e5f, #feb47b)",
+                   position: "relative",
+                   overflow: "hidden"
+                 }}>
 
               {/* Gloss effect */}
               <div style={{
@@ -215,21 +187,21 @@ function Accounts() {
                 className="form-control mb-3"
                 placeholder="Bank Name"
                 value={form.bankName}
-                onChange={(e) => setForm({ ...form, bankName: e.target.value })}
+                onChange={(e)=>setForm({...form, bankName:e.target.value})}
               />
 
               <input
                 className="form-control mb-3"
                 placeholder="Card Number"
                 value={form.cardNumber}
-                onChange={(e) => setForm({ ...form, cardNumber: e.target.value })}
+                onChange={(e)=>setForm({...form, cardNumber:e.target.value})}
               />
 
               <input
                 className="form-control mb-3"
                 placeholder="Account Holder"
                 value={form.accountHolder}
-                onChange={(e) => setForm({ ...form, accountHolder: e.target.value })}
+                onChange={(e)=>setForm({...form, accountHolder:e.target.value})}
               />
 
               <input
@@ -237,7 +209,7 @@ function Accounts() {
                 className="form-control mb-3"
                 placeholder="Balance"
                 value={form.balance}
-                onChange={(e) => setForm({ ...form, balance: e.target.value })}
+                onChange={(e)=>setForm({...form, balance:e.target.value})}
               />
 
               <div className="d-flex justify-content-between">
@@ -246,7 +218,7 @@ function Accounts() {
                   {form.id ? "Save" : "Add"}
                 </button>
 
-                <button className="btn btn-secondary px-4" onClick={() => setForm(null)}>
+                <button className="btn btn-secondary px-4" onClick={()=>setForm(null)}>
                   Cancel
                 </button>
 
