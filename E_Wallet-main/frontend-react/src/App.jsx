@@ -12,6 +12,7 @@ import Transfer from "./pages/Transfer";
 import Profile from "./pages/Profile";
 import Accounts from "./pages/Accounts";
 import AddAccount from "./pages/AddAccount";
+import SidebarLayout from "./components/SidebarLayout";
 import axios from "axios";
 
 
@@ -23,15 +24,19 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/success" element={<Success />} />
-        <Route path="/addmoney" element={<AddMoney />} />
-        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/mfa" element={<MFA />} />
         <Route path="/mfa-setup" element={<MFASetup />} />
-        <Route path="/transactions" element={<Transactions />} />
-        <Route path="/transfer" element={<Transfer />} />
-        <Route path="/profile" element={<Profile/>}/>
-        <Route path="/accounts" element={<Accounts />} />
-        <Route path="/add-account" element={<AddAccount />} />
+        
+        {/* Protected Routes with Sidebar Layout */}
+        <Route element={<SidebarLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/addmoney" element={<AddMoney />} />
+          <Route path="/transactions" element={<Transactions />} />
+          <Route path="/transfer" element={<Transfer />} />
+          <Route path="/profile" element={<Profile/>}/>
+          <Route path="/accounts" element={<Accounts />} />
+          <Route path="/add-account" element={<AddAccount />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

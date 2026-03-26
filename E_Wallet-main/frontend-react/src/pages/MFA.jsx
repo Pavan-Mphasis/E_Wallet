@@ -1,10 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 function MFA() {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(30);
+  
   const username = localStorage.getItem("username");
+  const navigate = useNavigate();
+
+  // 30-second timer for TOTP visual feedback
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 30));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,7 +28,7 @@ function MFA() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8080/auth/verify-otp", {
+      const response = await fetch("http://localhost:8081/auth/verify-otp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -29,8 +41,9 @@ function MFA() {
         const data = await response.json();
         localStorage.setItem("token", data.token);
         localStorage.setItem("userId", data.userId);
+        localStorage.setItem("mfaEnabled", "true");
         localStorage.removeItem("tempToken");
-        window.location.href = "/dashboard";
+        navigate("/dashboard");
       } else {
         alert("Invalid OTP. Please try again.");
         setOtp("");
@@ -83,20 +96,39 @@ function MFA() {
             alignItems: "center",
             justifyContent: "center",
             margin: "0 auto 24px",
-            boxShadow: "0 10px 25px rgba(59, 130, 246, 0.4)"
+            boxShadow: "0 10px 25px rgba(59, 130, 246, 0.4)",
+            position: "relative"
           }}
         >
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
             <line x1="12" y1="18" x2="12.01" y2="18"></line>
           </svg>
+          
+          {/* Circular progress for timer */}
+          <svg width="64" height="64" style={{ position: "absolute", top: 0, left: 0, transform: "rotate(-90deg)" }}>
+            <circle cx="32" cy="32" r="30" fill="transparent" stroke="rgba(255,255,255,0.2)" strokeWidth="4" />
+            <circle 
+              cx="32" cy="32" r="30" 
+              fill="transparent" 
+              stroke="#fff" 
+              strokeWidth="4" 
+              strokeDasharray="188.4" 
+              strokeDashoffset={188.4 - (188.4 * timeLeft) / 30} 
+              style={{ transition: "stroke-dashoffset 1s linear" }}
+            />
+          </svg>
         </motion.div>
 
         <h3 className="fw-bold text-white mb-2" style={{ letterSpacing: "-0.5px" }}>2-Step Verification</h3>
         
-        <p style={{ color: "#94a3b8", fontSize: "14px", marginBottom: "32px", lineHeight: "1.6" }}>
+        <p style={{ color: "#94a3b8", fontSize: "14px", marginBottom: "15px", lineHeight: "1.6" }}>
           Verifying secure access for <br/><strong className="text-white fw-bold">{username}</strong>
         </p>
+
+        <div style={{ color: timeLeft <= 5 ? "#ef4444" : "#3b82f6", fontWeight: "bold", fontSize: "14px", marginBottom: "25px", transition: "color 0.3s" }}>
+          <i className="bi bi-clock-history me-2"></i> Code resets in {timeLeft}s
+        </div>
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">

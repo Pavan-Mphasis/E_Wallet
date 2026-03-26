@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
 function Signup() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -26,7 +27,7 @@ function Signup() {
     }
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:8080/api/users/signup", {
+      const response = await fetch("http://localhost:8081/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
@@ -36,7 +37,7 @@ function Signup() {
         setError("Signup failed. Username might be taken.");
       } else {
         alert("Registration successful! Please login.");
-        window.location.href = "/";
+        navigate("/");
       }
     } catch {
       setError("Server error. Please try again later.");

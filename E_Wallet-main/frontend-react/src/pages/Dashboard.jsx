@@ -9,15 +9,22 @@ function Dashboard() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+    const userId = localStorage.getItem("userId");
 
-    fetch("http://localhost:8080/wallet/balance", {
+    if (!token || !userId || userId === "undefined") {
+      localStorage.clear();
+      navigate("/");
+      return;
+    }
+
+    fetch("http://localhost:8081/wallet/balance", {
       headers: { Authorization: "Bearer " + token },
     })
       .then((res) => res.json())
       .then((data) => setBalance(data.balance))
       .catch((err) => console.error(err));
 
-    fetch("http://localhost:8080/auth/mfa-status", {
+    fetch("http://localhost:8081/auth/mfa-status", {
       headers: { Authorization: "Bearer " + token },
     })
       .then((res) => res.json())
@@ -34,7 +41,7 @@ function Dashboard() {
     if (!window.confirm("Are you sure you want to disable MFA?")) return;
     const token = localStorage.getItem("token");
     try {
-      await fetch("http://localhost:8080/auth/disable-mfa", {
+      await fetch("http://localhost:8081/auth/disable-mfa", {
         method: "POST",
         headers: { Authorization: "Bearer " + token },
       });
@@ -45,15 +52,8 @@ function Dashboard() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)",
-        padding: "40px",
-        fontFamily: "'Inter', sans-serif"
-      }}
-    >
-      <div className="container" style={{ maxWidth: "1100px" }}>
+    <div style={{ padding: "40px 40px" }}>
+      <div className="container" style={{ maxWidth: "1200px", margin: "0 auto" }}>
         
         {/* NAVBAR */}
         <nav
@@ -116,90 +116,152 @@ function Dashboard() {
         >
           {/* HEADER */}
           <div className="mb-5">
-            <h2 className="fw-bold mb-1 text-white" style={{ letterSpacing: "-0.5px" }}>Dashboard</h2>
+            <h2 className="fw-bold mb-1 text-white" style={{ letterSpacing: "-0.5px" }}>
+              Good {new Date().getHours() < 12 ? "Morning" : new Date().getHours() < 18 ? "Afternoon" : "Evening"}, {localStorage.getItem("username") || "User"}! 👋
+            </h2>
             <p style={{ color: "#94a3b8" }}>Overview of your account health and recent activities.</p>
           </div>
 
           <div className="row g-4 mb-5">
-            {/* BALANCE CARD */}
-            <div className="col-lg-8">
+            {/* VIRTUAL CREDIT CARD & ACTIONS */}
+            <div className="col-lg-7">
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
+                initial={{ opacity: 0, rotateY: -15, scale: 0.95 }}
+                animate={{ opacity: 1, rotateY: 0, scale: 1 }}
+                transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
                 style={{
-                  height: "100%",
-                  borderRadius: "20px",
-                  background: "linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.15))",
-                  border: "1px solid rgba(16, 185, 129, 0.3)",
+                  height: "auto",
+                  minHeight: "240px",
+                  borderRadius: "24px",
+                  background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
                   padding: "35px",
                   color: "white",
                   position: "relative",
-                  overflow: "hidden"
+                  overflow: "hidden",
+                  boxShadow: "0 25px 50px -12px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.2)"
                 }}
               >
-                <div style={{ position: "absolute", top: "-50px", right: "-50px", width: "150px", height: "150px", background: "rgba(16, 185, 129, 0.2)", borderRadius: "50%", filter: "blur(30px)" }}></div>
+                {/* Holographic Gloss Effect */}
+                <div style={{ position: "absolute", top: "-100px", left: "-50px", width: "250px", height: "250px", background: "linear-gradient(135deg, rgba(255,255,255,0.15), transparent)", borderRadius: "50%", filter: "blur(30px)", transform: "rotate(45deg)", pointerEvents: "none" }}></div>
+                <div style={{ position: "absolute", bottom: "-80px", right: "-20px", width: "200px", height: "200px", background: "linear-gradient(135deg, rgba(59, 130, 246, 0.2), transparent)", borderRadius: "50%", filter: "blur(40px)", pointerEvents: "none" }}></div>
                 
-                <p className="mb-2 fw-semibold" style={{ color: "#6ee7b7", letterSpacing: "1px", textTransform: "uppercase", fontSize: "13px" }}>Total Available Balance</p>
-                <h1 className="fw-bold mb-4" style={{ fontSize: "3.5rem", letterSpacing: "-1px" }}>
-                  ₹{Number(balance).toLocaleString()}
-                </h1>
+                {/* Chip & Wireless */}
+                <div className="d-flex justify-content-between align-items-center mb-4" style={{ position: "relative", zIndex: 2 }}>
+                  <svg width="45" height="32" viewBox="0 0 45 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="45" height="32" rx="6" fill="#fbbf24"/>
+                    <path d="M12 0V32M33 0V32M0 12H45M0 20H45" stroke="#d97706" strokeWidth="1.5"/>
+                  </svg>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 2v20l2-2 2 2 2-2 2 2 2-2 2 2 2-2 2 2V2l-2 2-2-2-2 2-2-2-2 2-2-2-2 2Z"></path>
+                    <path d="M16 14v.01"></path>
+                    <path d="M8 14v.01"></path>
+                    <path d="M12 10v.01"></path>
+                  </svg>
+                </div>
 
-                <div className="d-flex flex-wrap gap-3 mt-4">
-                  <Link to="/addmoney" className="btn fw-semibold" style={{ background: "#10b981", color: "white", borderRadius: "12px", padding: "10px 24px", boxShadow: "0 4px 15px rgba(16, 185, 129, 0.4)" }}>
-                    Add Funds
-                  </Link>
-                  <Link to="/transfer" className="btn fw-semibold" style={{ background: "rgba(255,255,255,0.1)", color: "white", borderRadius: "12px", padding: "10px 24px", border: "1px solid rgba(255,255,255,0.2)", backdropFilter: "blur(10px)" }}>
-                    Transfer Money
-                  </Link>
+                <div style={{ position: "relative", zIndex: 2, marginBottom: "30px" }}>
+                  <p className="mb-0" style={{ color: "#94a3b8", fontSize: "12px", textTransform: "uppercase", letterSpacing: "2px" }}>Available Balance</p>
+                  <h1 className="fw-bold m-0" style={{ fontSize: "3.5rem", letterSpacing: "-1px", fontFamily: "'Courier New', Courier, monospace", textShadow: "0 2px 10px rgba(0,0,0,0.5)" }}>
+                    ₹{Number(balance).toLocaleString()}
+                  </h1>
+                </div>
+
+                <div className="d-flex justify-content-between align-items-end" style={{ position: "relative", zIndex: 2 }}>
+                  <div>
+                    <p className="mb-0" style={{ color: "rgba(255,255,255,0.5)", fontSize: "10px", textTransform: "uppercase", letterSpacing: "1.5px" }}>Card Holder</p>
+                    <p className="mb-0 fw-semibold" style={{ fontSize: "16px", letterSpacing: "2px", textTransform: "uppercase" }}>{localStorage.getItem("username") || "Valued User"}</p>
+                  </div>
+                  <div style={{ fontStyle: "italic", fontWeight: "900", fontSize: "24px", color: "rgba(255,255,255,0.9)", letterSpacing: "-1px" }}>E-Wallet<span style={{color: "#3b82f6"}}>Pro</span></div>
                 </div>
               </motion.div>
+
+              <div className="d-flex gap-3 mt-4">
+                <Link to="/addmoney" className="btn fw-semibold flex-grow-1" style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "white", borderRadius: "16px", padding: "14px", boxShadow: "0 8px 20px rgba(16, 185, 129, 0.3)" }}>
+                  <i className="bi bi-wallet2 me-2"></i> Add Funds
+                </Link>
+                <Link to="/transfer" className="btn fw-semibold flex-grow-1" style={{ background: "rgba(255,255,255,0.05)", color: "white", borderRadius: "16px", padding: "14px", border: "1px solid rgba(255,255,255,0.1)", backdropFilter: "blur(10px)" }}>
+                  <i className="bi bi-send-fill me-2"></i> Transfer Money
+                </Link>
+              </div>
             </div>
 
-            {/* SECURITY/MFA CARD */}
-            <div className="col-lg-4">
+            {/* SECURITY/MFA CARD & SPARKLINE */}
+            <div className="col-lg-5">
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
                 style={{
-                  height: "100%",
-                  borderRadius: "20px",
+                  borderRadius: "24px",
                   background: "rgba(0, 0, 0, 0.2)",
                   border: "1px solid rgba(255, 255, 255, 0.05)",
                   padding: "30px",
                   display: "flex",
                   flexDirection: "column",
-                  justifyContent: "space-between"
+                  justifyContent: "space-between",
+                  marginBottom: "20px"
                 }}
               >
                 <div>
                   <div className="d-flex align-items-center mb-3">
-                    <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: mfaEnabled ? "rgba(16, 185, 129, 0.2)" : "rgba(245, 158, 11, 0.2)", display: "flex", alignItems: "center", justifyContent: "center", marginRight: "12px" }}>
+                    <div style={{ width: "45px", height: "45px", borderRadius: "12px", background: mfaEnabled ? "rgba(16, 185, 129, 0.15)" : "rgba(245, 158, 11, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", marginRight: "16px", boxShadow: mfaEnabled ? "0 0 15px rgba(16, 185, 129, 0.2)" : "0 0 15px rgba(245, 158, 11, 0.2)" }}>
                       {mfaEnabled ? <span className="fs-5">🛡️</span> : <span className="fs-5">⚠️</span>}
                     </div>
-                    <h5 className="fw-bold text-white m-0">Security</h5>
+                    <div>
+                      <h5 className="fw-bold text-white m-0" style={{ letterSpacing: "-0.5px" }}>Global Security</h5>
+                      <span style={{ fontSize: "12px", color: mfaEnabled ? "#34d399" : "#fbbf24" }}>{mfaEnabled ? "Active & Protected" : "Vulnerable"}</span>
+                    </div>
                   </div>
                   <p style={{ color: "#94a3b8", fontSize: "14px", lineHeight: "1.6" }}>
-                    {mfaEnabled ? "Your account is highly secure with Two-Factor Authentication." : "Your account is missing 2FA protection. Enable it now."}
+                    {mfaEnabled ? "Your payments are tightly secured with Two-Factor Authentication." : "Your account is missing 2FA protection. Enable it now to prevent unauthorized transfers."}
                   </p>
                 </div>
 
-                <div className="mt-4">
-                  <div className="d-flex justify-content-between mb-3 text-white" style={{ fontSize: "14px", fontWeight: "500" }}>
-                    <span>2FA Status</span>
-                    <span style={{ color: mfaEnabled ? "#34d399" : "#fbbf24" }}>{mfaEnabled ? "Enabled" : "Disabled"}</span>
-                  </div>
+                <div className="mt-2">
                   {mfaEnabled ? (
-                    <button onClick={handleDisableMFA} className="btn w-100 fw-semibold" style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "#f87171", borderRadius: "10px", padding: "10px" }}>
+                    <button onClick={handleDisableMFA} className="btn w-100 fw-semibold" style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "#f87171", borderRadius: "14px", padding: "12px", transition: "all 0.3s" }}>
                       Disable MFA
                     </button>
                   ) : (
-                    <Link to="/mfa-setup" className="btn w-100 fw-semibold" style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)", border: "none", color: "white", borderRadius: "10px", boxShadow: "0 4px 15px rgba(245, 158, 11, 0.3)", padding: "10px" }}>
+                    <Link to="/mfa-setup" className="btn w-100 fw-semibold" style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)", border: "none", color: "white", borderRadius: "14px", boxShadow: "0 8px 20px rgba(245, 158, 11, 0.3)", padding: "12px", transition: "all 0.3s" }}>
                       Setup Protection
                     </Link>
                   )}
                 </div>
+              </motion.div>
+
+              {/* SPARKLINE CHART MOCK */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                style={{
+                  borderRadius: "24px",
+                  background: "linear-gradient(180deg, rgba(59, 130, 246, 0.1) 0%, rgba(0,0,0,0.2) 100%)",
+                  border: "1px solid rgba(59, 130, 246, 0.2)",
+                  padding: "30px",
+                  position: "relative",
+                  overflow: "hidden"
+                }}
+              >
+                <div className="d-flex justify-content-between align-items-center mb-4 text-white">
+                  <h6 className="fw-semibold m-0">Weekly Activity</h6>
+                  <span style={{ fontSize: "12px", color: "#60a5fa", background: "rgba(59, 130, 246, 0.2)", padding: "4px 10px", borderRadius: "10px" }}>+12.5%</span>
+                </div>
+                
+                <svg viewBox="0 0 200 60" style={{ width: "100%", height: "60px", overflow: "visible" }}>
+                  <defs>
+                    <linearGradient id="gradientPath" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="rgba(59, 130, 246, 0.5)" />
+                      <stop offset="100%" stopColor="rgba(59, 130, 246, 0)" />
+                    </linearGradient>
+                  </defs>
+                  
+                  <path d="M0 50 Q 20 40, 40 45 T 80 20 T 120 30 T 160 10 T 200 15 L 200 60 L 0 60 Z" fill="url(#gradientPath)" />
+                  <path d="M0 50 Q 20 40, 40 45 T 80 20 T 120 30 T 160 10 T 200 15" fill="none" stroke="#3b82f6" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                  <circle cx="160" cy="10" r="4" fill="#60a5fa" stroke="#fff" strokeWidth="2" />
+                </svg>
               </motion.div>
             </div>
           </div>

@@ -23,7 +23,7 @@ function AddAccount() {
 
     console.log("TOKEN BEING SENT:", token); // 🔥 ADD THIS
 
-    await fetch("http://localhost:8080/accounts", {
+    await fetch("http://localhost:8081/accounts", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

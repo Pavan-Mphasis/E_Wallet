@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
 function Login() {
+  const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -12,7 +13,7 @@ function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8080/auth/login", {
+      const response = await fetch("http://localhost:8081/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -41,11 +42,11 @@ function Login() {
       if (data.mfaRequired) {
         localStorage.setItem("mfaEnabled", "true");
         localStorage.setItem("tempToken", data.tempToken);
-        window.location.href = "/mfa";
+        navigate("/mfa");
       } else {
         localStorage.setItem("mfaEnabled", "false");
         localStorage.setItem("token", data.token);
-        window.location.href = "/dashboard";
+        navigate("/mfa-setup", { state: { info: "Please setup Two-Factor Authentication to secure your account." }});
       }
 
     } catch (err) {

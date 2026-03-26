@@ -158,7 +158,7 @@ public class ApiController {
 
     // ✅ VERIFY OTP
     @PostMapping("/auth/verify-otp")
-    public Map<String, String> verifyOtp(
+    public Map<String, Object> verifyOtp(
             @RequestHeader("Authorization") String authHeader,
             @RequestBody Map<String, String> req) {
 
@@ -189,7 +189,10 @@ public class ApiController {
 
         if (isValid) {
             String finalToken = jwtUtil.generateToken(username);
-            return Map.of("token", finalToken);
+            return Map.of(
+                    "token", finalToken,
+                    "userId", user.getId()
+            );
         }
 
         throw new RuntimeException("Invalid OTP");
@@ -242,5 +245,35 @@ public class ApiController {
             e.printStackTrace();
             return Map.of("message", "Server error");
         }
+    }
+
+    @GetMapping("/user/details")
+    public Map<String, Object> getUserDetails(Authentication auth) {
+        String username = auth.getName();
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            return Map.of("error", "User not found");
+        }
+        return Map.of(
+                "username", user.getUsername(),
+                "email", user.getEmail(),
+                "mfaEnabled", user.isMfaEnabled()
+        );
+    }
+
+    @PutMapping("/user/change-email")
+    public Map<String, Object> changeEmail(Authentication auth, @RequestBody Map<String, String> req) {
+        String username = auth.getName();
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            return Map.of("error", "User not found");
+        }
+        String newEmail = req.get("email");
+        if (newEmail == null || newEmail.trim().isEmpty()) {
+            return Map.of("message", "Invalid email");
+        }
+        user.setEmail(newEmail);
+        userRepository.save(user);
+        return Map.of("message", "Email updated successfully");
     }
 }

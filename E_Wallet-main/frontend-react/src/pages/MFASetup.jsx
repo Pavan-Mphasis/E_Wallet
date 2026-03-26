@@ -14,7 +14,7 @@ function MFASetup() {
 
   const checkStatus = async () => {
     try {
-      const res = await fetch("http://localhost:8080/auth/mfa-status", {
+      const res = await fetch("http://localhost:8081/auth/mfa-status", {
         headers: { Authorization: "Bearer " + token }
       });
       const data = await res.json();
@@ -31,7 +31,7 @@ function MFASetup() {
     }
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:8080/auth/enable-mfa", {
+      const response = await fetch("http://localhost:8081/auth/enable-mfa", {
         method: "POST",
         headers: { Authorization: "Bearer " + token }
       });
@@ -51,7 +51,7 @@ function MFASetup() {
   const handleDisableMFA = async () => {
     if (!window.confirm("Are you sure you want to disable MFA?")) return;
     try {
-      await fetch("http://localhost:8080/auth/disable-mfa", {
+      await fetch("http://localhost:8081/auth/disable-mfa", {
         method: "POST",
         headers: { Authorization: "Bearer " + token }
       });
@@ -178,24 +178,45 @@ function MFASetup() {
           </motion.button>
 
           {status === "Enabled" && (
-            <motion.button
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              whileHover={{ scale: 1.02, backgroundColor: "rgba(239, 68, 68, 0.15)" }}
-              whileTap={{ scale: 0.98 }}
-              className="btn w-100 fw-semibold"
-              onClick={handleDisableMFA}
-              style={{
-                background: "rgba(239, 68, 68, 0.05)",
-                color: "#f87171",
-                padding: "14px",
-                borderRadius: "14px",
-                border: "1px solid rgba(239, 68, 68, 0.2)",
-                transition: "all 0.3s ease"
-              }}
-            >
-              Disable MFA Protection
-            </motion.button>
+            <>
+              <motion.button
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                whileHover={{ scale: 1.02, backgroundColor: "rgba(16, 185, 129, 0.15)" }}
+                whileTap={{ scale: 0.98 }}
+                className="btn w-100 fw-semibold mb-3"
+                onClick={() => { localStorage.clear(); window.location.href = "/"; }}
+                style={{
+                  background: "rgba(16, 185, 129, 0.05)",
+                  color: "#34d399",
+                  padding: "14px",
+                  borderRadius: "14px",
+                  border: "1px solid rgba(16, 185, 129, 0.2)",
+                  transition: "all 0.3s ease"
+                }}
+              >
+                Logout & Verify App
+              </motion.button>
+              
+              <motion.button
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                whileHover={{ scale: 1.02, backgroundColor: "rgba(239, 68, 68, 0.15)" }}
+                whileTap={{ scale: 0.98 }}
+                className="btn w-100 fw-semibold"
+                onClick={handleDisableMFA}
+                style={{
+                  background: "rgba(239, 68, 68, 0.05)",
+                  color: "#f87171",
+                  padding: "14px",
+                  borderRadius: "14px",
+                  border: "1px solid rgba(239, 68, 68, 0.2)",
+                  transition: "all 0.3s ease"
+                }}
+              >
+                Disable MFA Protection
+              </motion.button>
+            </>
           )}
         </div>
 
