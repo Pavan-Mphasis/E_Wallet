@@ -2,3 +2,4 @@ com\ewallet\controller\WalletController.class
 com\ewallet\repository\WalletRepository.class
 com\ewallet\model\Wallet.class
 com\ewallet\controller\TransferController.class
+com\ewallet\controller\ApiController.class
