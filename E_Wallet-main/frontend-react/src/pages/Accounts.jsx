@@ -20,7 +20,7 @@ function Accounts() {
 
   const fetchAccounts = async () => {
     try {
-      const res = await fetch(`http://localhost:8081/accounts/${userId}`, {
+      const res = await fetch(`http://localhost:8081/accounts`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if(res.ok) {
@@ -55,7 +55,7 @@ function Accounts() {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`
       },
-      body: JSON.stringify({ ...form, userId: Number(userId), balance: Number(form.balance || 0) })
+      body: JSON.stringify({ ...form, balance: Number(form.balance || 0) })
     });
 
     setForm(null);

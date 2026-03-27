@@ -23,16 +23,20 @@ public class AccountController {
     private UserRepository userRepository;
 
     // GET accounts
-    @GetMapping("/{userId}")
-    public List<BankAccount> getAccounts(@PathVariable Long userId) {
-        return repo.findByUserId(userId);
+    @GetMapping
+    public List<BankAccount> getAccounts(org.springframework.security.core.Authentication auth) {
+        User user = userRepository.findByUsername(auth.getName());
+        return repo.findByUserId(user.getId());
     }
 
     // ADD account
     @PostMapping
-    public BankAccount addAccount(@RequestBody BankAccount account) {
+    public BankAccount addAccount(org.springframework.security.core.Authentication auth, @RequestBody BankAccount account) {
 
         System.out.println("ADD ACCOUNT CONTROLLER HIT");
+
+        User user = userRepository.findByUsername(auth.getName());
+        account.setUserId(user.getId());
 
         // 🔍 Debug incoming data
         System.out.println("Bank: " + account.getBankName());
@@ -40,11 +44,6 @@ public class AccountController {
         System.out.println("Holder: " + account.getAccountHolder());
         System.out.println("Balance: " + account.getBalance());
         System.out.println("UserId: " + account.getUserId());
-
-        // ❌ Prevent bad request
-        if (account.getUserId() == null) {
-            throw new RuntimeException("UserId is required");
-        }
 
         try {
             return repo.save(account);

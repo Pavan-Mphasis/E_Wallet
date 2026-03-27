@@ -63,12 +63,12 @@ function Profile() {
       body: JSON.stringify({ email: newEmail })
     });
     const data = await res.json();
-    if (res.ok) {
+    if (res.ok && !data.error && data.message !== "Invalid email") {
       setShowEmailModal(false);
       setNewEmail("");
       fetchProfile();
     } else {
-      setMessage(data.message || "Failed to update email");
+      setMessage(data.message || data.error || "Failed to update email");
     }
   };
 
@@ -91,13 +91,13 @@ function Profile() {
       body: JSON.stringify({ currentPassword, newPassword })
     });
     const data = await res.json();
-    if (res.ok) {
+    if (res.ok && !data.error && data.message === "Password updated successfully") {
       setShowPasswordModal(false);
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } else {
-      setMessage(data.message || "Failed to update password");
+      setMessage(data.message || data.error || "Failed to update password");
     }
   };
 
@@ -127,10 +127,10 @@ function Profile() {
           
           <div className="text-center mb-5">
             <div style={{ width: "90px", height: "90px", borderRadius: "50%", background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "36px", color: "#fff", fontWeight: "bold", boxShadow: "0 10px 25px rgba(59, 130, 246, 0.4)", border: "3px solid rgba(255,255,255,0.1)" }}>
-              {user.username?.charAt(0).toUpperCase() || "U"}
+              {user.username ? user.username.charAt(0).toUpperCase() : localStorage.getItem("username")?.charAt(0).toUpperCase() || "U"}
             </div>
-            <h4 className="text-white mt-3 fw-bold mb-1">@{user.username}</h4>
-            <p style={{ color: "#94a3b8", margin: 0 }}>{email}</p>
+            <h4 className="text-white mt-3 fw-bold mb-1">@{user.username || localStorage.getItem("username") || "user"}</h4>
+            <p style={{ color: "#94a3b8", margin: 0 }}>{email || "No email available"}</p>
           </div>
 
           <div className="row g-4 mb-5">
