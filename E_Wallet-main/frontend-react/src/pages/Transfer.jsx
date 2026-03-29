@@ -32,13 +32,17 @@ function Transfer() {
 
   const fetchAccounts = async () => {
     try {
-      const res = await fetch(`http://localhost:8081/accounts/${userId}`, {
+      const res = await fetch("http://localhost:8081/accounts", {
         headers: { Authorization: "Bearer " + token }
       });
+      if (!res.ok) {
+        throw new Error(`Failed to load accounts (${res.status})`);
+      }
       const data = await res.json();
       setAccounts(data);
     } catch (err) {
       console.error(err);
+      setMessage("Unable to load linked bank accounts.");
     }
   };
 
