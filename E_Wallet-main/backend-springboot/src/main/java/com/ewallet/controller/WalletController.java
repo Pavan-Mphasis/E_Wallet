@@ -1,5 +1,6 @@
 package com.ewallet.controller;
 
+import com.ewallet.model.Transaction;
 import com.ewallet.model.User;
 import com.ewallet.model.Wallet;
 import com.ewallet.repository.UserRepository;
@@ -98,13 +99,37 @@ public class WalletController {
     @PostMapping("/transfer/user")
     public ResponseEntity<?> transferToUser(Authentication auth, @RequestBody Map<String, Object> body) {
         try {
+            if (auth == null || auth.getName() == null) {
+                return ResponseEntity.status(401).body(Map.of("message", "Unauthorized"));
+            }
+
             User user = userRepository.findByUsername(auth.getName());
-            String receiverUsername = body.get("receiverUsername").toString();
-            Double amount = Double.valueOf(body.get("amount").toString());
+            if (user == null) {
+                return ResponseEntity.status(401).body(Map.of("message", "Unauthorized"));
+            }
 
-            walletService.transferWalletToWallet(user.getId(), receiverUsername, amount);
+            Object receiverValue = body.get("receiverUsername");
+            Object amountValue = body.get("amount");
+            if (receiverValue == null || receiverValue.toString().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Receiver username is required"));
+            }
+            if (amountValue == null) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Amount is required"));
+            }
 
-            return ResponseEntity.ok(Map.of("message", "Funds transferred successfully"));
+            String receiverUsername = receiverValue.toString().trim();
+            Double amount = Double.valueOf(amountValue.toString());
+
+            Transaction transaction = walletService.transferWalletToWallet(user.getId(), receiverUsername, amount);
+            Double remainingWalletBalance = walletService.getWalletByUserId(user.getId()).getBalance();
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Funds transferred successfully",
+                    "transactionId", transaction.getId(),
+                    "receiverId", transaction.getReceiver(),
+                    "receiverUsername", receiverUsername,
+                    "remainingWalletBalance", remainingWalletBalance
+            ));
         } catch (RuntimeException e) {
             return ResponseEntity.status(400).body(Map.of("message", e.getMessage()));
         }

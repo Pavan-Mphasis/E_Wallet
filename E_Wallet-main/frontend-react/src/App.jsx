@@ -13,7 +13,8 @@ import Profile from "./pages/Profile";
 import Accounts from "./pages/Accounts";
 import AddAccount from "./pages/AddAccount";
 import SidebarLayout from "./components/SidebarLayout";
-import axios from "axios";
+import AdminLogin from "./pages/AdminLogin";
+import AdminUsers from "./pages/AdminUsers";
 
 
 function App() {
@@ -22,10 +23,12 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
+        <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/success" element={<Success />} />
         <Route path="/mfa" element={<MFA />} />
         <Route path="/mfa-setup" element={<MFASetup />} />
+        <Route path="/admin/users" element={<AdminUsers />} />
         
         {/* Protected Routes with Sidebar Layout */}
         <Route element={<SidebarLayout />}>

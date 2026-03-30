@@ -133,12 +133,17 @@ public class WalletService {
 
     // 🚀 NEW: Peer to Peer Wallet Transfer
     @Transactional
-    public void transferWalletToWallet(Long senderId, String receiverUsername, Double amount) {
+    public Transaction transferWalletToWallet(Long senderId, String receiverUsername, Double amount) {
         if (amount == null || amount <= 0) {
             throw new IllegalArgumentException("Invalid amount");
         }
 
-        User receiver = userRepository.findByUsername(receiverUsername);
+        String normalizedUsername = receiverUsername == null ? "" : receiverUsername.trim();
+        if (normalizedUsername.isEmpty()) {
+            throw new IllegalArgumentException("Receiver username is required");
+        }
+
+        User receiver = userRepository.findByUsername(normalizedUsername);
         if (receiver == null) {
             throw new RuntimeException("Receiver username not found");
         }
@@ -167,7 +172,7 @@ public class WalletService {
         txn.setType("WALLET_TRANSFER");
         txn.setStatus("SUCCESS");
         txn.setDateTime(LocalDateTime.now());
-        transactionRepository.save(txn);
+        return transactionRepository.save(txn);
     }
     
     // 🚀 NEW: Withdraw to bank

@@ -2,8 +2,10 @@ package com.ewallet.controller;
 
 import com.ewallet.jwt.JwtUtil;
 import com.ewallet.model.User;
+import com.ewallet.model.UserRole;
 import com.ewallet.model.Wallet;
 import com.ewallet.repository.UserRepository;
+import com.ewallet.repository.UserRoleRepository;
 
 import com.ewallet.repository.WalletRepository;
 import dev.samstevens.totp.qr.QrData;
@@ -14,6 +16,8 @@ import dev.samstevens.totp.code.DefaultCodeGenerator;
 import dev.samstevens.totp.time.SystemTimeProvider;
 import dev.samstevens.totp.code.HashingAlgorithm;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,6 +33,7 @@ public class ApiController {
 
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
+    private final UserRoleRepository userRoleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final WalletRepository walletRepository;
@@ -36,11 +41,13 @@ public class ApiController {
 
     public ApiController(AuthenticationManager authenticationManager,
                          UserRepository userRepository,
+                         UserRoleRepository userRoleRepository,
                          PasswordEncoder passwordEncoder,
                          JwtUtil jwtUtil,
                          WalletRepository walletRepo) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
+        this.userRoleRepository = userRoleRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.walletRepository = walletRepo ;
@@ -56,22 +63,39 @@ public class ApiController {
 
         user.setPasskey(passwordEncoder.encode(user.getPasskey()));
         user.setBalance(0.0);
-        userRepository.save(user);
+        user.setBlocked(false);
+        User savedUser = userRepository.save(user);
+
+        UserRole userRole = new UserRole();
+        userRole.setUserId(savedUser.getId());
+        userRole.setRoleType("USER");
+        userRoleRepository.save(userRole);
+
         return "User Registered";
     }
 
     // ✅ LOGIN
     @PostMapping("/auth/login")
-    public Map<String, Object> login(@RequestBody User user) {
+    public ResponseEntity<?> login(@RequestBody User user) {
 
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        user.getUsername(),
-                        user.getPasskey()
-                )
-        );
+        User existingUser = userRepository.findByUsername(user.getUsername());
 
-        User dbUser = userRepository.findByUsername(user.getUsername());
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            user.getUsername(),
+                            user.getPasskey()
+                    )
+            );
+        } catch (AuthenticationException ex) {
+            if (existingUser != null && existingUser.isBlocked()) {
+                return ResponseEntity.status(403).body(Map.of("message", "Your account has been blocked by admin"));
+            }
+            return ResponseEntity.status(401).body(Map.of("message", "Invalid username or password"));
+        }
+
+        User dbUser = existingUser != null ? existingUser : userRepository.findByUsername(user.getUsername());
+        String roleType = resolveRole(dbUser.getId());
 
         System.out.println("MFA Enabled: " + dbUser.isMfaEnabled());
         System.out.println("User Id: " + dbUser.getId());
@@ -80,20 +104,22 @@ public class ApiController {
 
             String tempToken = jwtUtil.generateToken(user.getUsername());
 
-            return Map.of(
+            return ResponseEntity.ok(Map.of(
                     "mfaRequired", true,
                     "tempToken", tempToken,
-                    "userId", dbUser.getId()
-            );
+                    "userId", dbUser.getId(),
+                    "role", roleType
+            ));
         }
 
         String token = jwtUtil.generateToken(user.getUsername());
 
-        return Map.of(
+        return ResponseEntity.ok(Map.of(
                 "mfaRequired", false,
                 "token", token,
-                "userId", dbUser.getId()
-        );
+                "userId", dbUser.getId(),
+                "role", roleType
+        ));
     }
     // ✅ ENABLE MFA
     @PostMapping("/auth/enable-mfa")
@@ -158,12 +184,12 @@ public class ApiController {
 
     // ✅ VERIFY OTP
     @PostMapping("/auth/verify-otp")
-    public Map<String, Object> verifyOtp(
+    public ResponseEntity<?> verifyOtp(
             @RequestHeader("Authorization") String authHeader,
             @RequestBody Map<String, String> req) {
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new RuntimeException("Missing token");
+            return ResponseEntity.status(401).body(Map.of("message", "Missing token"));
         }
 
 
@@ -173,6 +199,12 @@ public class ApiController {
         String otp = req.get("otp");
 
         User user = userRepository.findByUsername(username);
+        if (user == null) {
+            return ResponseEntity.status(404).body(Map.of("message", "User not found"));
+        }
+        if (user.isBlocked()) {
+            return ResponseEntity.status(403).body(Map.of("message", "Your account has been blocked by admin"));
+        }
 
         System.out.println("Secret: " + user.getMfaSecret());
         System.out.println("OTP from user: " + otp);
@@ -189,13 +221,15 @@ public class ApiController {
 
         if (isValid) {
             String finalToken = jwtUtil.generateToken(username);
-            return Map.of(
+            String roleType = resolveRole(user.getId());
+            return ResponseEntity.ok(Map.of(
                     "token", finalToken,
-                    "userId", user.getId()
-            );
+                    "userId", user.getId(),
+                    "role", roleType
+            ));
         }
 
-        throw new RuntimeException("Invalid OTP");
+        return ResponseEntity.status(400).body(Map.of("message", "Invalid OTP"));
     }
 
 
@@ -257,7 +291,9 @@ public class ApiController {
         return Map.of(
                 "username", user.getUsername(),
                 "email", user.getEmail(),
-                "mfaEnabled", user.isMfaEnabled()
+                "mfaEnabled", user.isMfaEnabled(),
+                "blocked", user.isBlocked(),
+                "role", resolveRole(user.getId())
         );
     }
 
@@ -275,5 +311,10 @@ public class ApiController {
         user.setEmail(newEmail);
         userRepository.save(user);
         return Map.of("message", "Email updated successfully");
+    }
+
+    private String resolveRole(Long userId) {
+        UserRole userRole = userRoleRepository.findByUserId(userId).orElse(null);
+        return userRole != null ? userRole.getRoleType() : "USER";
     }
 }

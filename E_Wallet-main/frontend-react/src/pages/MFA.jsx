@@ -37,15 +37,19 @@ function MFA() {
         body: JSON.stringify({ otp })
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        const data = await response.json();
+        const role = data.role || localStorage.getItem("tempRole") || localStorage.getItem("role") || "USER";
         localStorage.setItem("token", data.token);
         localStorage.setItem("userId", data.userId);
+        localStorage.setItem("role", role);
         localStorage.setItem("mfaEnabled", "true");
         localStorage.removeItem("tempToken");
-        navigate("/dashboard");
+        localStorage.removeItem("tempRole");
+        navigate(role === "ADMIN" ? "/admin/users" : "/dashboard");
       } else {
-        alert("Invalid OTP. Please try again.");
+        alert(data.message || "Invalid OTP. Please try again.");
         setOtp("");
       }
     } catch {

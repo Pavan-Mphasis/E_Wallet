@@ -4,7 +4,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,8 +12,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import java.util.List;
 
 import java.io.IOException;
 
@@ -34,31 +31,29 @@ public class JwtFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        System.out.println("JWT FILTER HIT");
-
         final String authHeader = request.getHeader("Authorization");
 
         String username = null;
-        String jwt = null;
 
-        if(authHeader != null && authHeader.startsWith("Bearer ")){
-
-            jwt = authHeader.substring(7);
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String jwt = authHeader.substring(7);
             username = jwtUtil.extractUsername(jwt);
-
         }
 
-        if(username != null && SecurityContextHolder.getContext().getAuthentication() == null){
-
-            UserDetails userDetails =
-                    userDetailsService.loadUserByUsername(username);
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            if (!userDetails.isEnabled() || !userDetails.isAccountNonLocked()) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"message\":\"User account is blocked\"}");
+                return;
+            }
 
             UsernamePasswordAuthenticationToken authToken =
                     new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
-                            List.of(new SimpleGrantedAuthority("ROLE_USER")) // 🔥 FIX
-
+                            userDetails.getAuthorities()
                     );
 
             authToken.setDetails(
@@ -68,6 +63,6 @@ public class JwtFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authToken);
         }
 
-        filterChain.doFilter(request,response);
+        filterChain.doFilter(request, response);
     }
 }

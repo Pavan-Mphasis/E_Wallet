@@ -27,6 +27,7 @@ public class User {
 
     private boolean mfaEnabled;
     private String mfaSecret;
+    private boolean blocked;
 
     // ✅ IMPORTANT: use double
     private double balance = 0.0;
@@ -63,6 +64,14 @@ public class User {
 
     public void setMfaSecret(String mfaSecret) {
         this.mfaSecret = mfaSecret;
+    }
+
+    public boolean isBlocked() {
+        return blocked;
+    }
+
+    public void setBlocked(boolean blocked) {
+        this.blocked = blocked;
     }
 
     public double getBalance() {
